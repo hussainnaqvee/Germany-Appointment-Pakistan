@@ -2,13 +2,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
+import sys
+from playsound import playsound as play
 
-option_list = ['',
-               'Stipendiat bei Finanzierung durch deutsche Wissenschafts- oder Mittlerorganisation z.B. DAAD oder AvH/Recipient of a full scholarship paid by an official German academic institution e.g. DAAD or AvH',
-               'Promotionsstudenten mit Zulassung einer deutschen Universität/Phd students holding an admission letter from a german university',
-               'Studienvorbereitung (z.B. Sprachkurs mit anschließendem Studienkolleg)/Study preparation (e.g. language course followed by a foundation course)',
-                'Sprachkurse zu anderen als Studienzwecken/Language courses for purposes other than study'
-               ]
+
 def setup_driver():
     driver = webdriver.Chrome()
 
@@ -18,7 +15,7 @@ def navigate_to_page(driver, url):
     # Go to the provided URL
     driver.get(url)
 
-def teardown_driver(driver):
+def close_driver(driver):
     # Close the driver
     driver.quit()
 
@@ -28,25 +25,27 @@ def main():
     while(isAvailable == False):
         try:
             navigate_to_page(
-                driver, "https://service2.diplo.de/rktermin/extern/appointment_showForm.do?locationCode=isla&realmId=108&categoryId=1600")
+                driver, "https://service2.diplo.de/rktermin/extern/choose_categoryList.do?locationCode=isla&realmId=108&request_locale=en")
         
             time.sleep(5)
-            element = driver.find_element(
-                By.CSS_SELECTOR, 'select[id="appointment_newAppointmentForm_fields_3__content"]')
-            options = element.find_elements(By.TAG_NAME,'option')
-            if len(options)>5:
-                isAvailable = True
-            print(len(options))
-            for op in options:
-                if op.accessible_name not in option_list and 'Master' in op.accessible_name:
-                    print(op.accessible_name)
+            divs = driver.find_elements(By.CSS_SELECTOR, 'div[style="font-size: 14pt; font-weight: bold; margin-bottom: 1em;"]')
+            for div in divs:
+                if 'study' in div.text.lower():
+                    print(div.text)
                     isAvailable = True
-            time.sleep(25)
+                    break
         except:
             print("error, Check your internet conenction or website is down.")
+    if isAvailable:
+        close_driver(driver)
+    while(isAvailable):
+        try:
+            play('mixkit-classic-winner-alarm-1997.wav')
+            print("Appointments are now open.")
+        except KeyboardInterrupt:
+            sys.exit()
+
     
-    print("Appointments are now open.")
-    teardown_driver(driver)
 
 if __name__ == "__main__":
     main()
